@@ -1,48 +1,24 @@
-"""
-    DFT zdefiniowane jest jako
-
-    X_f_k = sum(x * W_kn_N)
-
-    gdzie x(n), n = 0, 1, ... , N - 1 to proba sygnalu probkowanego rownomierne tzn.
-    co dokladnie odpowiedni interwal (tzw. "sampling interval"), N to liczba prob ("sampling rate")
-
-    W_N = exp(-j2PI/N)
-
-    jest N-tym pierwiastkiem z jednosci,
-
-    W_kn_N = exp((-j2PI/N)kn) oraz
-
-    X_f_k, k = 0,1, ... , N - 1
-
-    jest k-tym wspolczynnikiem DFT,
-
-    j = math.sqrt(-1)
-"""
-
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-import math
 
 """
-    Funkcja generuje sygnal, zwraca jego "samplingRate" prob 
+    Generates a signal, returns it's samples - amount of samples is given by "samplingRate"
 """
-def generateSignal(samplingRate):
+
+def generateSignal(samplingRate, samplingInterval = 1.0):
     """
-        Sygnal w domenie czasu gdzie 0 <= t <= 1,
-        probkujemy dokladnie "samplingRate" punktow co "samplingInterval"
+        Signal function "x" is in time domain where we hardcode that 0 <= t <= "samplingInterval",
+        we do sample "samplingRate" points distributed uniformly with "uniformStep"
     """
 
-    samplingInterval = 1.0 / samplingRate
-    t = np.arange(0, 1, samplingInterval)
+    uniformStep = samplingInterval / samplingRate
+    t = np.arange(0, samplingInterval, uniformStep)
 
     """
-        'Hardcodujemy' sygnal "x" poprzez sume pewnych funkcji sinus,
-        odpowiednio je skladamy oraz skalujemy aby mialy odpowiednia 
-        czestotliwosc oraz amplitude, gdzie
-        
-        frequency - czestotliwosc sygnalu
-        amplitude - amplituda sygnalu
+        We do generate a signal "x" as a sum of certain composition of sine functions
+        scalled by a factor to make sure they have an amplitude and frequency known
+        in advance
     """
 
     frequency = 1.
@@ -58,22 +34,22 @@ def generateSignal(samplingRate):
     x += amplitude * np.sin(2 * np.pi * frequency * t)  # x_3(t)
 
     """
-        Funkcja proby sygnalu x : t -> R wyraz sie jako
-        
+        Final signal x : t -> R is
+
         x(t) = x_1(t) + x_2(t) + x_3(t)
     """
 
     return [t, x, samplingInterval]
 
 """
-    Funkcja zwraca wspolczynnik W_kn_N     
+    Returns W_kn_N coefficient  
 """
 
 def getW_kn_N(k, n, N):
     return np.exp(((-1j * 2 * np.pi) / N) * k * n)
 
 """
-    Funkcja liczy DFT sygnalu "x" oraz zwraca k-ty wspolczynnik Fouriera
+    Calculates DFT of a signal "x" and return the k-th DFT coefficient
 """
 
 def getDFT(k, x, normalize = True):
@@ -89,18 +65,19 @@ def getDFT(k, x, normalize = True):
     return X_f_k
 
 samplingRate = 100
-signal = generateSignal(samplingRate)
+samplingInterval = 1.0
+
+signal = generateSignal(samplingRate, samplingInterval)
 
 t = signal[0]
 x = signal[1]
-samplingInterval = signal[2]
 N = len(t)
 
 plt.figure(figsize=(9, 7))
 plt.plot(t, x, 'r', marker='o', linestyle=':', markersize=4)
-plt.xlabel('Czas (s)')
-plt.ylabel('Probka')
-plt.title('Wykres proby sygnalu')
+plt.xlabel('Time (s)')
+plt.ylabel('Sample value')
+plt.title('Samples plot')
 plt.show()
 
 X_f = np.array([complex(0, 0)] * N, dtype = complex)
@@ -112,15 +89,13 @@ for k in range(N):
 
 eTime = time.time()
 timeElapsed = eTime - sTime
-print("Czas liczenia %d wspolczynnikow DFT = %0.5es" % (N, timeElapsed))
+print("Time of calculating %d DFT coefficients = %0.5es" % (N, timeElapsed))
 
-n = np.arange(N)
-T = N / samplingRate
-frequencyDomain = n / T
+frequencyDomain = np.arange(N) / samplingInterval
 
 plt.figure(figsize=(9, 7))
 plt.stem(frequencyDomain, abs(X_f), 'b', markerfmt="bo", basefmt="-b")
-plt.xlabel('Czestotliwosc (Hz)')
+plt.xlabel('Frequency (Hz)')
 plt.ylabel('|X_f(frequency)|')
-plt.title('Spektrum magnitudy Fouriera')
+plt.title('Magnitude Fourier Spectrum')
 plt.show()
